@@ -150,12 +150,12 @@ export function ExhibitionStage({
                 <span className="font-mono text-zinc-300">{activeProduct.code}</span>
               </div>
 
-              <h1
-                className="hero-stagger font-display text-3xl sm:text-4xl lg:text-[2.65rem] font-semibold tracking-tight text-white leading-[1.12]"
+              <h2
+                className="hero-stagger font-display text-3xl sm:text-4xl lg:text-[2.5rem] font-semibold tracking-tight text-white leading-[1.12]"
                 style={{ textWrap: 'balance' }}
               >
                 {activeProduct.name}
-              </h1>
+              </h2>
 
               <p className="hero-stagger text-base text-zinc-300 leading-relaxed">
                 {activeProduct.description}

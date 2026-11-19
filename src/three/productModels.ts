@@ -176,23 +176,26 @@ function buildMonolithLamp(
 function buildChronographWatch(
   textures: StudioTextures,
   isSoftwareGl: boolean,
+  floating = false,
 ): THREE.Group {
   const group = new THREE.Group();
   const primaryMat = createPrimaryMaterial(textures);
   const accentMat = createAccentMaterial();
   const darkMat = createSecondaryDarkMaterial();
 
-  // 1. Display slate plinth stand (bottom at y = 0)
-  const standGeo = new THREE.BoxGeometry(1.15, 0.14, 0.92);
-  const standMesh = new THREE.Mesh(standGeo, darkMat);
-  standMesh.position.set(0, 0.07, 0);
-  registerPart(standMesh, new THREE.Vector3(0, -0.22, 0));
-  group.add(standMesh);
+  // 1. Display slate plinth stand (bottom at y = 0) — omitted in floating hero mode
+  if (!floating) {
+    const standGeo = new THREE.BoxGeometry(1.15, 0.14, 0.92);
+    const standMesh = new THREE.Mesh(standGeo, darkMat);
+    standMesh.position.set(0, 0.07, 0);
+    registerPart(standMesh, new THREE.Vector3(0, -0.22, 0));
+    group.add(standMesh);
+  }
 
   // Angled watch assembly container
   const watchAssembly = new THREE.Group();
-  watchAssembly.position.set(0, 0.94, 0);
-  watchAssembly.rotation.x = -0.28;
+  watchAssembly.position.set(0, floating ? 0 : 0.94, 0);
+  watchAssembly.rotation.x = floating ? -0.14 : -0.28;
 
   // 2. Brushed bracelet collar / display cradle
   const strapGeo = new THREE.CylinderGeometry(0.62, 0.62, 0.48, 48, 1, true);
@@ -525,12 +528,13 @@ export function buildProductModel(
   modelId: ProductModelId,
   textures: StudioTextures,
   isSoftwareGl: boolean,
+  options?: { floating?: boolean },
 ): THREE.Group {
   switch (modelId) {
     case 'monolith-lamp':
       return buildMonolithLamp(textures);
     case 'chronograph-watch':
-      return buildChronographWatch(textures, isSoftwareGl);
+      return buildChronographWatch(textures, isSoftwareGl, Boolean(options?.floating));
     case 'acoustic-speaker':
       return buildAcousticSpeaker(textures);
     case 'ceramic-vessel':

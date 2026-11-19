@@ -7,7 +7,7 @@ export function Navbar({ onNavigateCatalog }: NavbarProps) {
     <header className="sticky top-0 z-40 h-16 bg-black border-b border-white/10">
       <div className="max-w-7xl mx-auto h-full px-6 flex items-center justify-between gap-8">
         <a
-          href="#exhibicion"
+          href="#inicio"
           className="font-display text-lg font-semibold tracking-wide text-white whitespace-nowrap shrink-0 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#D4A853]"
         >
           Krono Atelier
@@ -17,6 +17,12 @@ export function Navbar({ onNavigateCatalog }: NavbarProps) {
           aria-label="Navegación principal"
           className="hidden md:flex items-center gap-8 text-sm font-medium text-zinc-400"
         >
+          <a
+            href="#inicio"
+            className="hover:text-white transition-colors duration-150 whitespace-nowrap shrink-0 py-1 border-b border-transparent hover:border-[#D4A853]"
+          >
+            Inicio
+          </a>
           <a
             href="#exhibicion"
             className="hover:text-white transition-colors duration-150 whitespace-nowrap shrink-0 py-1 border-b border-transparent hover:border-[#D4A853]"

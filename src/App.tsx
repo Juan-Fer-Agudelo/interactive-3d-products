@@ -6,6 +6,7 @@ import {
   type ProductModelId,
 } from './data/products';
 import { Navbar } from './components/Navbar';
+import { HeroParallax } from './components/HeroParallax';
 import { ExhibitionStage } from './components/ExhibitionStage';
 import { CatalogSection } from './components/CatalogSection';
 import { MaterialsSection } from './components/MaterialsSection';
@@ -37,6 +38,11 @@ export default function App() {
       <Navbar onNavigateCatalog={handleNavigateCatalog} />
 
       <main className="flex-1">
+        <HeroParallax
+          onExploreExhibition={handleInspectIn3D}
+          onExploreCatalog={handleNavigateCatalog}
+        />
+
         <ExhibitionStage
           activeProduct={activeProduct}
           activeFinish={activeFinish}
