@@ -61,3 +61,80 @@ input[type="range"].studio-slider::-moz-range-thumb {
   border: 2px solid #08080a;
   cursor: pointer;
 }
+
+/* ---------------------------------------------------------------------------
+   Showcase section ("Colección"): staggered slide-in / slide-out reveals.
+   Each .reveal carries --i (its order) and --n (total) so the active panel
+   reveals top-to-bottom and the leaving panel hides bottom-to-top.
+   --------------------------------------------------------------------------- */
+.showcase-panel {
+  pointer-events: none;
+}
+
+.showcase-panel.is-active {
+  pointer-events: auto;
+}
+
+.showcase-panel .reveal {
+  opacity: 0;
+  transform: translateX(60px);
+  transition:
+    opacity 0.3s ease-in,
+    transform 0.3s ease-in;
+  transition-delay: calc((var(--n, 1) - 1 - var(--i, 0)) * 0.05s);
+  will-change: opacity, transform;
+}
+
+.showcase-panel.is-active .reveal {
+  opacity: 1;
+  transform: translateX(0);
+  transition-timing-function: ease-out, ease-out;
+  transition-delay: calc(0.3s + var(--i, 0) * 0.05s);
+}
+
+/* Pill CTA: two half-backgrounds that slide together on hover (reference behaviour) */
+.pill-cta {
+  position: relative;
+  isolation: isolate;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.pill-cta::before,
+.pill-cta::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: calc(50% + 14px);
+  background: var(--accent, #d4a853);
+  transition: transform 0.2s ease-out;
+  z-index: 0;
+}
+
+.pill-cta::before {
+  left: -14px;
+  border-radius: 999px 0 0 999px;
+  transform: translateX(12px);
+}
+
+.pill-cta::after {
+  right: -14px;
+  border-radius: 0 999px 999px 0;
+  transform: translateX(-12px);
+}
+
+.pill-cta:hover::before,
+.pill-cta:hover::after,
+.pill-cta:focus-visible::before,
+.pill-cta:focus-visible::after {
+  transform: translateX(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .showcase-panel .reveal,
+  .pill-cta::before,
+  .pill-cta::after {
+    transition: none;
+  }
+}

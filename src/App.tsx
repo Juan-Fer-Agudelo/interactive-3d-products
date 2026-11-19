@@ -7,6 +7,7 @@ import {
 } from './data/products';
 import { Navbar } from './components/Navbar';
 import { HeroParallax } from './components/HeroParallax';
+import { ShowcaseSection } from './components/ShowcaseSection';
 import { ExhibitionStage } from './components/ExhibitionStage';
 import { CatalogSection } from './components/CatalogSection';
 import { MaterialsSection } from './components/MaterialsSection';
@@ -41,6 +42,11 @@ export default function App() {
         <HeroParallax
           onExploreExhibition={handleInspectIn3D}
           onExploreCatalog={handleNavigateCatalog}
+        />
+
+        <ShowcaseSection
+          onInspectIn3D={handleInspectIn3D}
+          onOpenDetails={setModalProduct}
         />
 
         <ExhibitionStage

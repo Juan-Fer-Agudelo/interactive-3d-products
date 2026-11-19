@@ -24,6 +24,12 @@ export function Navbar({ onNavigateCatalog }: NavbarProps) {
             Inicio
           </a>
           <a
+            href="#coleccion"
+            className="hover:text-white transition-colors duration-150 whitespace-nowrap shrink-0 py-1 border-b border-transparent hover:border-[#D4A853]"
+          >
+            Colección
+          </a>
+          <a
             href="#exhibicion"
             className="hover:text-white transition-colors duration-150 whitespace-nowrap shrink-0 py-1 border-b border-transparent hover:border-[#D4A853]"
           >
