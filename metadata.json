@@ -1,0 +1,8 @@
+{
+  "name": "Krono Atelier — Catálogo 3D",
+  "description": "Catálogo de objetos de diseño industrial y exhibición interactiva 3D en modo oscuro.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
