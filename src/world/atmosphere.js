@@ -19,18 +19,18 @@ export function buildSky() {
       void main() {
         vec3 d = normalize(vDir);
         float up = clamp(d.y, -0.2, 1.0);
-        vec3 top = mix(mix(vec3(0.36, 0.63, 0.86), vec3(0.47, 0.52, 0.58), uRain), vec3(0.012, 0.022, 0.07), uNight);
+        vec3 top = mix(mix(vec3(0.42, 0.64, 0.84), vec3(0.52, 0.52, 0.54), uRain), vec3(0.012, 0.022, 0.07), uNight);
         vec3 col = mix(uFogColor, top, smoothstep(-0.02, 0.62, up));
         // soft clouds, drifting
         vec2 uv = d.xz / (abs(d.y) + 0.35);
         float c = noise3(vec3(uv * 1.6 + uTime * 0.012, 3.0)) * 0.6 + noise3(vec3(uv * 3.7 - uTime * 0.02, 9.0)) * 0.4;
         float cover = mix(0.6, 0.34, uRain);
         float cloud = smoothstep(cover, cover + 0.3, c) * smoothstep(0.02, 0.3, d.y);
-        vec3 cloudCol = mix(mix(vec3(1.0), vec3(0.62, 0.66, 0.72), uRain), vec3(0.09, 0.12, 0.22), uNight);
+        vec3 cloudCol = mix(mix(vec3(1.0, 0.95, 0.88), vec3(0.64, 0.64, 0.66), uRain), vec3(0.09, 0.12, 0.22), uNight);
         col = mix(col, cloudCol, cloud * mix(0.7, 0.95, uRain));
         // sun, and at night a moon in its place
         float s = max(dot(d, normalize(uSun)), 0.0);
-        col += vec3(1.0, 0.93, 0.75) * (pow(s, 600.0) * 2.0 + pow(s, 24.0) * 0.18) * (1.0 - uNight) * (1.0 - uRain);
+        col += vec3(1.0, 0.82, 0.55) * (pow(s, 600.0) * 2.0 + pow(s, 24.0) * 0.26 + pow(s, 4.0) * 0.08) * (1.0 - uNight) * (1.0 - uRain);
         float clear = 1.0 - cloud * mix(0.85, 0.35, uNight);
         // stars: round points that twinkle, thinning out only at the very horizon
         vec3 sd = d * 190.0;
@@ -64,14 +64,14 @@ export function buildSky() {
 }
 
 // --------------------------------------------------------------- lights ---
-const DAY_FOG = new THREE.Color('#bcd9ef'), RAIN_FOG = new THREE.Color('#a4b0ba'), NIGHT_FOG = new THREE.Color('#0c1430');
-const SUN_DAY = new THREE.Color('#fff2d6'), SUN_NIGHT = new THREE.Color('#7f9cff');
-const HEMI_SKY = new THREE.Color('#dcecff'), HEMI_NIGHT = new THREE.Color('#33407a');
+const DAY_FOG = new THREE.Color('#f2dcbc'), RAIN_FOG = new THREE.Color('#b5aea4'), NIGHT_FOG = new THREE.Color('#0c1430');
+const SUN_DAY = new THREE.Color('#ffd49a'), SUN_NIGHT = new THREE.Color('#7f9cff');
+const HEMI_SKY = new THREE.Color('#ffe7c7'), HEMI_NIGHT = new THREE.Color('#33407a');
 
 export function buildLights(shadows) {
   const group = new THREE.Group();
-  const hemi = new THREE.HemisphereLight('#dcecff', '#7a6a48', 1.5);
-  const sun = new THREE.DirectionalLight('#fff2d6', 2.3);
+  const hemi = new THREE.HemisphereLight('#ffe7c7', '#8a6238', 1.5);
+  const sun = new THREE.DirectionalLight('#ffd49a', 2.3);
   if (shadows) {
     sun.castShadow = true;
     sun.shadow.mapSize.setScalar(shadows);
@@ -84,7 +84,7 @@ export function buildLights(shadows) {
     sun.shadow.normalBias = 0.04;
   }
   group.add(hemi, sun, sun.target);
-  const fog = new THREE.Fog('#bcd9ef', 60, 400);
+  const fog = new THREE.Fog('#f2dcbc', 60, 400);
   return {
     group,
     fog,

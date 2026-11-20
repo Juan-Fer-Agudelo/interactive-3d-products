@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { profile } from '../data/profile';
 import { FONT, canvasTexture, makeMaterial, wrapText } from './shared';
 import { WORLD_R, heightAt, bareAt, vnoise, mulberry32 } from './terrain';
-import { aboutBoard, boards, camp, lamps, mailbox, pond, rocks, skillsLine, stones } from './layout';
+import { aboutBoard, boards, camp, fencePosts, lamps, mailbox, pond, rocks, skillsLine, stones } from './layout';
 
 const lambert = (color, extra = {}) => new THREE.MeshLambertMaterial({ color, ...extra });
 const WOOD = lambert('#6b4428');
@@ -27,6 +27,34 @@ function placed(x, y, z, rot = 0) {
   return g;
 }
 
+// ---------------------------------------------------------------- fence ---
+// Posts and two rails around the safe area, drawn as two instanced meshes.
+export function buildFence() {
+  const group = new THREE.Group();
+  const n = fencePosts.length;
+  const posts = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.11, 0.13, 1.3, 6), WOOD_DARK, n);
+  const rails = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 0.1, 0.07), WOOD, n * 2);
+  const m = new THREE.Matrix4(), q = new THREE.Quaternion(), s = new THREE.Vector3(), v = new THREE.Vector3();
+  const a = new THREE.Vector3(), b = new THREE.Vector3(), X = new THREE.Vector3(1, 0, 0);
+  fencePosts.forEach((p, i) => {
+    m.makeTranslation(p.x, p.y + 0.5, p.z);
+    posts.setMatrixAt(i, m);
+    const o = fencePosts[(i + 1) % n];
+    [0.45, 0.88].forEach((h, k) => {
+      a.set(p.x, p.y + h, p.z);
+      b.set(o.x, o.y + h, o.z);
+      v.subVectors(b, a);
+      s.set(v.length() + 0.1, 1, 1);
+      q.setFromUnitVectors(X, v.normalize());
+      m.compose(a.add(b).multiplyScalar(0.5), q, s);
+      rails.setMatrixAt(i * 2 + k, m);
+    });
+  });
+  posts.castShadow = rails.castShadow = true;
+  group.add(posts, rails);
+  return group;
+}
+
 // --------------------------------------------------------------- ground ---
 export function buildGround() {
   const RINGS = 72, SEGS = 132;
@@ -48,7 +76,7 @@ export function buildGround() {
       index.push(a + j, a + k, b + j, a + k, b + k, b + j);
     }
   }
-  const earth = new THREE.Color('#63513a'), trail = new THREE.Color('#8a744f'), moss = new THREE.Color('#4f6b33');
+  const earth = new THREE.Color('#6e5234'), trail = new THREE.Color('#9b7a4c'), moss = new THREE.Color('#5c6d2e');
   const colors = [];
   const c = new THREE.Color();
   for (let i = 0; i < positions.length; i += 3) {
@@ -72,7 +100,7 @@ export function buildGround() {
 export function buildStonesAndRocks() {
   const group = new THREE.Group();
   const m = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler();
-  const slab = new THREE.InstancedMesh(new THREE.CylinderGeometry(1, 1.08, 0.16, 9), lambert('#b3b0a3'), stones.length);
+  const slab = new THREE.InstancedMesh(new THREE.CylinderGeometry(1, 1.08, 0.16, 9), lambert('#c2b49a'), stones.length);
   stones.forEach((s, i) => {
     q.setFromEuler(e.set(0, s.rot, 0));
     slab.setMatrixAt(i, m.compose(new THREE.Vector3(s.x, s.y + 0.03, s.z), q, new THREE.Vector3(s.r, 1, s.r * 0.82)));
@@ -80,7 +108,7 @@ export function buildStonesAndRocks() {
   slab.receiveShadow = true;
   group.add(slab);
 
-  const grey = new THREE.Color('#8f9088'), green = new THREE.Color('#6f8a45');
+  const grey = new THREE.Color('#9a9080'), green = new THREE.Color('#6f8a45');
   rocks.forEach((r) => {
     const geo = new THREE.IcosahedronGeometry(1, 1);
     const p = geo.attributes.position;
@@ -278,23 +306,31 @@ function boardTexture(project, index) {
     ctx.fillText(String(index + 1).padStart(2, '0'), 48, 44);
     ctx.fillStyle = '#ffffff';
     ctx.font = `900 ${project.name.length > 16 ? 60 : 78}px ${FONT}`;
-    const y = wrapText(ctx, project.name.toLowerCase(), 48, 104, w - 96, 78, 2);
+    const y = wrapText(ctx, project.name, 48, 104, w - 96, 78, 2);
     ctx.font = `700 34px ${FONT}`;
     ctx.fillStyle = 'rgba(255,255,255,0.9)';
-    ctx.fillText(project.tag.toLowerCase(), 48, y + 6);
+    ctx.fillText(project.tag, 48, y + 6);
     ctx.font = `700 28px ${FONT}`;
     let x = 48;
     project.stack.slice(0, 4).forEach((s) => {
-      const tw = ctx.measureText(s.toLowerCase()).width + 36;
+      const tw = ctx.measureText(s).width + 36;
       if (x + tw > w - 40) return;
       ctx.fillStyle = 'rgba(255,255,255,0.2)';
       ctx.beginPath();
       ctx.roundRect(x, h - 96, tw, 50, 25);
       ctx.fill();
       ctx.fillStyle = '#ffffff';
-      ctx.fillText(s.toLowerCase(), x + 18, h - 86);
+      ctx.fillText(s, x + 18, h - 86);
       x += tw + 12;
     });
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.13)';
+    for (let sy = 0; sy < h; sy += 4) ctx.fillRect(0, sy, w, 2);
+    const v = ctx.createRadialGradient(w / 2, h / 2, h * 0.35, w / 2, h / 2, w * 0.62);
+    v.addColorStop(0, 'rgba(0, 0, 0, 0)');
+    v.addColorStop(1, 'rgba(0, 0, 0, 0.55)');
+    ctx.fillStyle = v;
+    ctx.fillRect(0, 0, w, h);
   });
 }
 
@@ -313,17 +349,104 @@ function sign(parent, text, pos, width = 1.7) {
   return part(parent, new THREE.PlaneGeometry(width, width / 4), new THREE.MeshBasicMaterial({ map: tex, transparent: true, side: THREE.DoubleSide }), pos, null, false);
 }
 
+// A clownfish swimming a lazy figure eight under the surface, with a little
+// leap out of the water every so often.
+function buildClownfish() {
+  const group = new THREE.Group();
+  const body = new THREE.Group();
+  group.add(body);
+  const orange = lambert('#ff7a1a'), white = lambert('#fffaf0'), black = lambert('#1c1410');
+  const shape = (geo, material, pos, scale, rot) => {
+    const m = part(body, geo, material, pos, rot, false);
+    if (scale) m.scale.set(scale[0], scale[1], scale[2]);
+    return m;
+  };
+  shape(new THREE.SphereGeometry(0.2, 16, 12), orange, [0, 0, 0], [0.62, 0.85, 1.35]);
+  // Three white bands with dark edges: thin slices across the body.
+  [[0.17, 0.92], [0.0, 1.0], [-0.17, 0.78]].forEach(([z, k]) => {
+    shape(new THREE.SphereGeometry(0.2, 16, 10), black, [0, 0, z], [0.64 * k, 0.87 * k, 0.16]);
+    shape(new THREE.SphereGeometry(0.2, 16, 10), white, [0, 0, z], [0.65 * k, 0.88 * k, 0.1]);
+  });
+  const tail = new THREE.Group();
+  tail.position.z = -0.26;
+  body.add(tail);
+  const fin = (parent, pos, scale, rot) => {
+    const m = part(parent, new THREE.SphereGeometry(0.12, 10, 8), orange, pos, rot, false);
+    m.scale.set(scale[0], scale[1], scale[2]);
+  };
+  fin(tail, [0, 0, -0.06], [0.12, 0.9, 0.7]);
+  part(tail, new THREE.SphereGeometry(0.12, 10, 8), black, [0, 0, -0.14], null, false).scale.set(0.13, 0.85, 0.15);
+  fin(body, [0, 0.16, -0.02], [0.1, 0.55, 1.2]);
+  fin(body, [0.11, -0.05, 0.08], [0.1, 0.35, 0.55], [0, 0.6, 0.5]);
+  fin(body, [-0.11, -0.05, 0.08], [0.1, 0.35, 0.55], [0, -0.6, -0.5]);
+  [-1, 1].forEach((side) => {
+    part(body, new THREE.SphereGeometry(0.035, 8, 6), white, [side * 0.1, 0.05, 0.19], null, false);
+    part(body, new THREE.SphereGeometry(0.022, 8, 6), black, [side * 0.12, 0.05, 0.205], null, false);
+  });
+
+  const LEAP_EVERY = 9, LEAP_TIME = 1.1;
+  const at = (t, out) => {
+    const a = t * 0.42;
+    out.x = pond.x + Math.cos(a) * 2.5;
+    out.z = pond.z + Math.sin(a * 2) * 1.5;
+    return out;
+  };
+  const p0 = { x: 0, z: 0 }, p1 = { x: 0, z: 0 };
+  return {
+    group,
+    update(t) {
+      at(t, p0);
+      at(t + 0.05, p1);
+      group.position.set(p0.x, pond.y - 0.14 + Math.sin(t * 1.3) * 0.03, p0.z);
+      group.rotation.y = Math.atan2(p1.x - p0.x, p1.z - p0.z);
+      tail.rotation.y = Math.sin(t * 11) * 0.45;
+      body.rotation.y = Math.sin(t * 11 + 1) * 0.06;
+      // Every few seconds, a small arc out of the water.
+      const k = (t % LEAP_EVERY) / LEAP_TIME;
+      if (k < 1) {
+        group.position.y += Math.sin(k * Math.PI) * 0.75;
+        body.rotation.x = (0.5 - k) * 1.4;
+      } else body.rotation.x = 0;
+    },
+  };
+}
+
 export function buildPlaces() {
   const group = new THREE.Group();
 
-  // Project boards.
+  // Projects: one retro TV set each, the screen showing the project.
+  const screens = [];
+  const bezel = lambert('#211c22'), brass = lambert('#d9b25a'), metal = lambert('#8c8f94');
+  const glare = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.07, depthWrite: false });
   boards.forEach((b) => {
     const g = placed(b.x, b.y - 0.1, b.z, b.rot);
-    rod(g, 0.08, 3.3, WOOD_DARK, [-1.6, 1.65, 0]);
-    rod(g, 0.08, 3.3, WOOD_DARK, [1.6, 1.65, 0]);
-    box(g, [3.5, 2.4, 0.14], WOOD, [0, 2.05, 0]);
-    box(g, [3.8, 0.12, 0.5], WOOD_DARK, [0, 3.32, 0.05], [0.18, 0, 0]);
-    part(g, new THREE.PlaneGeometry(3.2, 2.13), new THREE.MeshBasicMaterial({ map: boardTexture(b.project, b.i) }), [0, 2.05, 0.08], null, false);
+    // Splayed legs.
+    [[-1.6, -0.05], [1.6, -0.05], [-1.6, -0.95], [1.6, -0.95]].forEach(([x, z]) =>
+      rod(g, 0.07, 0.8, WOOD_DARK, [x, 0.38, z], [z < -0.5 ? -0.14 : 0.14, 0, x < 0 ? -0.14 : 0.14]));
+    // Wooden cabinet, a darker trim and the screen bezel.
+    box(g, [3.9, 2.6, 1.3], WOOD, [0, 2.0, -0.5]);
+    box(g, [4.0, 0.12, 1.4], WOOD_DARK, [0, 3.33, -0.5]);
+    box(g, [4.0, 0.12, 1.4], WOOD_DARK, [0, 0.69, -0.5]);
+    box(g, [2.98, 2.12, 0.08], bezel, [-0.38, 2.0, 0.17]);
+    const screen = part(g, new THREE.PlaneGeometry(2.76, 1.84), new THREE.MeshBasicMaterial({ map: boardTexture(b.project, b.i) }), [-0.38, 2.0, 0.215], null, false);
+    part(g, new THREE.PlaneGeometry(1.1, 1.6), glare, [-1.15, 2.05, 0.22], [0, 0, -0.35], false);
+    screens.push(screen.material);
+    // Control panel: two knobs and a speaker grille.
+    [2.5, 2.0].forEach((y) => {
+      part(g, new THREE.CylinderGeometry(0.17, 0.17, 0.1, 14), brass, [1.47, y, 0.2], [Math.PI / 2, 0, 0]);
+      box(g, [0.04, 0.2, 0.04], WOOD_DARK, [1.47, y + 0.04, 0.26]);
+    });
+    for (let i = 0; i < 5; i++) box(g, [0.5, 0.04, 0.03], bezel, [1.47, 1.55 - i * 0.1, 0.16]);
+    // Rabbit-ear antenna.
+    part(g, new THREE.SphereGeometry(0.2, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), bezel, [0.3, 3.38, -0.5]);
+    [-0.5, 0.5].forEach((tilt) => {
+      const ear = new THREE.Group();
+      ear.position.set(0.3, 3.45, -0.5);
+      ear.rotation.z = tilt;
+      rod(ear, 0.022, 1.5, metal, [0, 0.75, 0]);
+      part(ear, new THREE.SphereGeometry(0.05, 8, 6), metal, [0, 1.5, 0]);
+      g.add(ear);
+    });
     group.add(g);
   });
 
@@ -339,16 +462,16 @@ export function buildPlaces() {
     ctx.textBaseline = 'top';
     ctx.fillStyle = '#b8612c';
     ctx.font = `800 34px ${FONT}`;
-    ctx.fillText('sobre mí', 56, 44);
+    ctx.fillText('Sobre mí', 56, 44);
     ctx.fillStyle = '#3b3226';
     ctx.font = `900 76px ${FONT}`;
-    ctx.fillText('hola, soy juan fer', 56, 92);
+    ctx.fillText('Hola, soy Juan Fer', 56, 92);
     ctx.font = `600 36px ${FONT}`;
     ctx.fillStyle = '#5a4d3c';
-    wrapText(ctx, 'desarrollador full-stack en medellín. convierto procesos manuales en software que la gente usa todos los días: de 14 horas a minutos, de 5 horas a 3 minutos.', 56, 206, w - 112, 50, 5);
+    wrapText(ctx, 'Desarrollador full-stack en Medellín. Convierto procesos manuales en software que la gente usa todos los días: de 14 horas a minutos, de 5 horas a 3 minutos.', 56, 206, w - 112, 50, 5);
     ctx.fillStyle = '#7a9c3c';
     ctx.font = `800 32px ${FONT}`;
-    ctx.fillText('acércate y pulsa E para leer todo', 56, h - 84);
+    ctx.fillText('Acércate y pulsa E para leer todo', 56, h - 84);
   });
   part(about, new THREE.PlaneGeometry(4.3, 2.6), new THREE.MeshBasicMaterial({ map: aboutTex }), [0, 2.3, 0.09], null, false);
   group.add(about);
@@ -371,10 +494,10 @@ export function buildPlaces() {
       ctx.fillStyle = '#3b3226';
       ctx.textBaseline = 'top';
       ctx.font = `900 38px ${FONT}`;
-      let y = wrapText(ctx, s.group.toLowerCase(), 26, 30, w - 52, 42, 2) + 10;
+      let y = wrapText(ctx, s.group, 26, 30, w - 52, 42, 2) + 10;
       ctx.font = `600 27px ${FONT}`;
       ctx.fillStyle = '#5a4d3c';
-      s.items.slice(0, 7).forEach((item) => { if (y < h - 40) { ctx.fillText('· ' + item.toLowerCase().slice(0, 18), 26, y); y += 37; } });
+      s.items.slice(0, 7).forEach((item) => { if (y < h - 40) { ctx.fillText('· ' + item.slice(0, 18), 26, y); y += 37; } });
     });
     const pivot = new THREE.Group();
     pivot.position.set(x, sag(x), 0);
@@ -383,7 +506,7 @@ export function buildPlaces() {
     line.add(pivot);
     cards.push(pivot);
   });
-  sign(line, 'habilidades', [0, 3.45, 0]);
+  sign(line, 'Habilidades', [0, 3.45, 0]);
   group.add(line);
 
   // Contact: the pond and its mailbox.
@@ -402,7 +525,7 @@ export function buildPlaces() {
         vec3 col = mix(vec3(0.20, 0.52, 0.66), vec3(0.55, 0.82, 0.90), n * 0.6 + ring * 0.12 * (1.0 - r));
         col = mix(col, vec3(0.93, 0.98, 1.0), smoothstep(0.86, 0.99, r) * 0.7 + step(0.985, n + ring * 0.05) * 0.5);
         col += uRain * step(0.82, noise3(vec3(p * 46.0, floor(uTime * 9.0)))) * 0.18;
-        gl_FragColor = vec4(withFog(grade(col), vDist), 0.9);
+        gl_FragColor = vec4(withFog(grade(col), vDist), mix(0.55, 0.92, smoothstep(0.55, 0.95, r)));
         #include <colorspace_fragment>
       }`,
   }), [pond.x, pond.y, pond.z], [-Math.PI / 2, 0, 0], false);
@@ -420,19 +543,22 @@ export function buildPlaces() {
     rod(group, 0.022, 1.5 + (i % 4) * 0.25, lambert('#6c8a3a'), [x, heightAt(x, z) + 0.7, z], [0.06 * (i % 3), 0, 0.05]);
     if (i % 2) rod(group, 0.05, 0.3, lambert('#6b4428'), [x, heightAt(x, z) + 1.5 + (i % 4) * 0.12, z]);
   }
+  const fish = buildClownfish();
+  group.add(fish.group);
+
   const post = placed(mailbox.x, mailbox.y - 0.05, mailbox.z, mailbox.rot);
   rod(post, 0.07, 1.4, WOOD_DARK, [0, 0.7, 0]);
   box(post, [0.5, 0.36, 0.72], lambert('#d9553f'), [0, 1.5, 0]);
   part(post, new THREE.CylinderGeometry(0.25, 0.25, 0.72, 10, 1, false, 0, Math.PI), lambert('#d9553f'), [0, 1.68, 0], [Math.PI / 2, Math.PI / 2, 0]);
   box(post, [0.04, 0.3, 0.16], lambert('#f5dc4a'), [0.28, 1.72, 0.2]);
-  sign(post, 'contacto', [0, 2.35, 0], 1.5);
+  sign(post, 'Contacto', [0, 2.35, 0], 1.5);
   group.add(post);
 
   // Signpost where the trail enters the clearing of project boards.
   const gateX = boards[0].x + 1.2, gateZ = boards[0].z + 3.4;
   const gate = placed(gateX, heightAt(gateX, gateZ) - 0.05, gateZ, Math.atan2(-gateX, -gateZ));
   rod(gate, 0.07, 2.4, WOOD_DARK, [0, 1.2, 0]);
-  sign(gate, 'trabajo seleccionado', [0, 2.55, 0], 2.9);
+  sign(gate, 'Trabajo seleccionado', [0, 2.55, 0], 2.9);
   group.add(gate);
 
   return {
@@ -443,6 +569,8 @@ export function buildPlaces() {
         c.rotation.z = Math.sin(t * 1.1 + i * 2.3) * 0.05;
       });
       pads.forEach((p, i) => { p.position.y = pond.y + 0.03 + Math.sin(t * 1.2 + i) * 0.012; });
+      fish.update(t);
+      screens.forEach((m, i) => { m.color.setScalar(0.93 + Math.sin(t * 9 + i * 2.1) * 0.025 + Math.sin(t * 23 + i) * 0.02); });
     },
   };
 }

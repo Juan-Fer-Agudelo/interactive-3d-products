@@ -12,7 +12,7 @@ export const U = {
   uPlayer: { value: new THREE.Vector3(0, -999, 0) },
   uSun: { value: SUN_DIR },
   uTrail: { value: null },
-  uFogColor: { value: new THREE.Color('#bcd9ef') },
+  uFogColor: { value: new THREE.Color('#f2dcbc') },
   uFogNear: { value: 60 },
   uFogFar: { value: 400 },
 };
@@ -51,6 +51,7 @@ float noise3(vec3 x) {
 }
 // Weather and time of day, applied to every hand-written material the same way.
 vec3 grade(vec3 c) {
+  c *= mix(vec3(1.07, 1.0, 0.86), vec3(1.0), max(uRain, uNight));
   float g = dot(c, vec3(0.3, 0.6, 0.1));
   c = mix(c, mix(c, vec3(g), 0.35) * vec3(0.72, 0.77, 0.84), uRain);
   c = mix(c, c * vec3(0.2, 0.27, 0.5) + vec3(0.0, 0.004, 0.02), uNight);

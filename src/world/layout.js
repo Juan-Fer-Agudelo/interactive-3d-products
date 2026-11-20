@@ -1,7 +1,7 @@
 // Where every object of the meadow stands. Deterministic, so the scene, the
 // physics and the interface all agree without talking to each other.
 import { profile } from '../data/profile';
-import { PLACES, WORK_C, WALK_R, POND, heightAt, pathDist, mulberry32, PATH_SEGMENTS } from './terrain';
+import { PLACES, WORK_C, WALK_R, SAFE_R, POND, heightAt, pathDist, mulberry32, PATH_SEGMENTS } from './terrain';
 
 const place = (id) => PLACES.find((p) => p.id === id);
 const facing = (fromX, fromZ, toX, toZ) => Math.atan2(toX - fromX, toZ - fromZ);
@@ -33,11 +33,11 @@ export const camp = {
 
 // --- Things you can walk up to and open ----------------------------------
 export const interactables = [
-  ...boards.map((b) => ({ id: 'project:' + b.i, x: b.x, z: b.z, r: 4.4, label: 'ver ' + b.project.name.toLowerCase() })),
-  { id: 'about', x: aboutBoard.x, z: aboutBoard.z, r: 4.6, label: 'leer sobre mí' },
-  { id: 'skills', x: skillsLine.x, z: skillsLine.z, r: 4.6, label: 'ver habilidades' },
-  { id: 'contact', x: mailbox.x, z: mailbox.z, r: 4.2, label: 'escribirme' },
-  { id: 'fire', x: 0, z: 0, r: 2.9, label: 'descansar junto al fuego' },
+  ...boards.map((b) => ({ id: 'project:' + b.i, x: b.x, z: b.z, r: 4.4, label: 'Ver ' + b.project.name })),
+  { id: 'about', x: aboutBoard.x, z: aboutBoard.z, r: 4.6, label: 'Leer sobre mí' },
+  { id: 'skills', x: skillsLine.x, z: skillsLine.z, r: 4.6, label: 'Ver habilidades' },
+  { id: 'contact', x: mailbox.x, z: mailbox.z, r: 4.2, label: 'Escribirme' },
+  { id: 'fire', x: 0, z: 0, r: 2.9, label: 'Descansar junto al fuego' },
 ];
 
 // --- Trees ----------------------------------------------------------------
@@ -122,12 +122,28 @@ PATH_SEGMENTS.forEach(([ax, az, bx, bz]) => {
   }
 });
 
+// --- Fence around the safe area ------------------------------------------
+const FENCE_N = 84;
+export const fencePosts = Array.from({ length: FENCE_N }, (_, i) => {
+  const a = (i / FENCE_N) * Math.PI * 2;
+  const x = Math.cos(a) * SAFE_R, z = Math.sin(a) * SAFE_R;
+  return { a, x, z, y: heightAt(x, z) };
+});
+// One invisible wall per gap, taller than any jump.
+const fenceWalls = fencePosts.map((p, i) => {
+  const q = fencePosts[(i + 1) % FENCE_N];
+  const m = p.a + Math.PI / FENCE_N;
+  const x = Math.cos(m) * SAFE_R, z = Math.sin(m) * SAFE_R;
+  const half = Math.hypot(q.x - p.x, q.z - p.z) / 2 + 0.05;
+  return { type: 'box', x, y: Math.min(p.y, q.y) - 0.5, z, hx: half, hy: 2.5, hz: 0.25, rot: -(m + Math.PI / 2) };
+});
+
 // --- Solid things, for the physics ---------------------------------------
 export const obstacles = [
   ...trees.map((t) => ({ type: 'cyl', x: t.x, y: t.y, z: t.z, r: t.r + 0.16, h: 4 })),
   ...rocks.map((r) => ({ type: 'ball', x: r.x, y: r.y + r.r * r.squash * 0.2, z: r.z, r: r.r * 0.92 })),
   ...lamps.map((l) => ({ type: 'cyl', x: l.x, y: l.y, z: l.z, r: 0.2, h: 3 })),
-  ...boards.map((b) => ({ type: 'box', x: b.x, y: b.y, z: b.z, hx: 1.75, hy: 1.6, hz: 0.22, rot: b.rot })),
+  ...boards.map((b) => ({ type: 'box', x: b.x - Math.sin(b.rot) * 0.5, y: b.y, z: b.z - Math.cos(b.rot) * 0.5, hx: 2.0, hy: 1.8, hz: 0.68, rot: b.rot })),
   { type: 'box', x: aboutBoard.x, y: aboutBoard.y, z: aboutBoard.z, hx: 2.3, hy: 1.8, hz: 0.3, rot: aboutBoard.rot },
   { type: 'cyl', x: skillsLine.x + Math.cos(skillsLine.rot) * 3.2, y: skillsLine.y, z: skillsLine.z - Math.sin(skillsLine.rot) * 3.2, r: 0.22, h: 3 },
   { type: 'cyl', x: skillsLine.x - Math.cos(skillsLine.rot) * 3.2, y: skillsLine.y, z: skillsLine.z + Math.sin(skillsLine.rot) * 3.2, r: 0.22, h: 3 },
@@ -136,4 +152,5 @@ export const obstacles = [
   { type: 'box', x: camp.tent.x, y: camp.tent.y, z: camp.tent.z, hx: 2.5, hy: 1.4, hz: 1.7, rot: camp.tent.rot },
   { type: 'box', x: camp.stall.x, y: camp.stall.y, z: camp.stall.z, hx: 1.3, hy: 1.2, hz: 0.8, rot: camp.stall.rot },
   { type: 'box', x: camp.log.x, y: camp.log.y, z: camp.log.z, hx: 1.1, hy: 0.3, hz: 0.32, rot: camp.log.rot },
+  ...fenceWalls,
 ];

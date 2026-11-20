@@ -9,7 +9,7 @@ La idea y el formato vienen del portafolio de Vipin Pathak, [curllmooha.com](htt
 | Lugar | Qué abre |
 | --- | --- |
 | Campamento (fogata) | Punto de partida. Descansar junto al fuego hace caer la noche. |
-| Claro de tableros | Siete proyectos, cada uno con su ficha. |
+| Claro de televisores | Siete proyectos, cada uno en la pantalla de un televisor retro. |
 | Tablero de madera | Sobre mí y resultados. |
 | Papeles colgados | Habilidades. |
 | Estanque y buzón | Contacto. |

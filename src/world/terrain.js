@@ -2,6 +2,9 @@
 // the physics and everything that has to stand on the ground.
 export const WORLD_R = 64;
 export const WALK_R = WORLD_R - 7;
+// Safe perimeter: a wooden fence that keeps the character near what matters.
+// Every place sits well inside it, and the ground only starts to drop past it.
+export const SAFE_R = 40;
 
 export const smooth = (a, b, x) => {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
@@ -39,11 +42,11 @@ function base(x, z) {
 // Where things are. Each place flattens the ground around it.
 export const WORK_C = { x: 13, z: -24 };
 export const PLACES = [
-  { id: 'camp', label: 'campamento', note: 'la fogata, donde empieza todo', x: 0, z: 0, r: 8, stand: [-1.6, 3.6] },
-  { id: 'work', label: 'trabajo seleccionado', note: 'siete proyectos en un claro', x: WORK_C.x, z: WORK_C.z, r: 11, stand: [WORK_C.x - 1, WORK_C.z + 3] },
-  { id: 'about', label: 'sobre mí', note: 'el tablero de madera', x: -17, z: -9, r: 4.5, stand: [-14.2, -7.4] },
-  { id: 'skills', label: 'habilidades', note: 'papeles colgados al viento', x: -19, z: 15, r: 4.5, stand: [-16.4, 12.8] },
-  { id: 'contact', label: 'contacto', note: 'el estanque', x: 19, z: 14, r: 6.5, stand: [14.6, 10.6] },
+  { id: 'camp', label: 'Campamento', note: 'La fogata, donde empieza todo', x: 0, z: 0, r: 8, stand: [-1.6, 3.6] },
+  { id: 'work', label: 'Trabajo seleccionado', note: 'Siete televisores en un claro', x: WORK_C.x, z: WORK_C.z, r: 11, stand: [WORK_C.x - 1, WORK_C.z + 3] },
+  { id: 'about', label: 'Sobre mí', note: 'El tablero de madera', x: -17, z: -9, r: 4.5, stand: [-14.2, -7.4] },
+  { id: 'skills', label: 'Habilidades', note: 'Papeles colgados al viento', x: -19, z: 15, r: 4.5, stand: [-16.4, 12.8] },
+  { id: 'contact', label: 'Contacto', note: 'El estanque', x: 19, z: 14, r: 6.5, stand: [14.6, 10.6] },
 ].map((p) => ({ ...p, h: base(p.x, p.z) }));
 
 export const POND = PLACES.find((p) => p.id === 'contact');

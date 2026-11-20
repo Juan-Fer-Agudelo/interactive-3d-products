@@ -14,8 +14,8 @@ const BLADE_INDEX = [0, 1, 2, 1, 3, 2, 2, 3, 4, 3, 5, 4, 4, 5, 6];
 const grassMaterial = () => makeMaterial({
   side: THREE.DoubleSide,
   uniforms: {
-    uBase: { value: new THREE.Color('#2c7a34') },
-    uTip: { value: new THREE.Color('#86cf4c') },
+    uBase: { value: new THREE.Color('#3f7a2c') },
+    uTip: { value: new THREE.Color('#b4d04c') },
   },
   vertex: /* glsl */ `
     attribute vec3 aOffset;

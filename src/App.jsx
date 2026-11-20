@@ -30,15 +30,15 @@ const step = (progress, phrase) => new Promise((resolve) => {
 });
 
 async function prepare() {
-  await step(0.08, 'preparando el terreno…');
+  await step(0.08, 'Preparando el terreno…');
   // The signs are drawn on canvases, so the typeface has to be there first.
   await Promise.race([
     Promise.all([document.fonts.load(`900 40px ${FONT}`), document.fonts.load(`600 40px ${FONT}`)]),
     new Promise((r) => setTimeout(r, 2500)),
   ]);
-  await step(0.3, 'sembrando el pasto…');
+  await step(0.3, 'Sembrando el pasto…');
   const ground = buildGround();
-  await step(0.5, 'alisando el camino…');
+  await step(0.5, 'Alisando el camino…');
   let physics = null;
   try {
     const p = live.player;
@@ -46,7 +46,7 @@ async function prepare() {
   } catch (error) {
     console.warn('Sin motor de física: el personaje camina sobre el terreno sin chocar.', error);
   }
-  await step(0.78, 'encendiendo la fogata…');
+  await step(0.78, 'Encendiendo la fogata…');
   return { ground, physics };
 }
 

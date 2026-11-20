@@ -4,7 +4,7 @@ import { useSyncExternalStore } from 'react';
 let state = {
   phase: 'loading', // loading | opening | meadow | flat
   progress: 0,
-  phrase: 'preparando el terreno…',
+  phrase: 'Preparando el terreno…',
   sound: true,
   quality: 'high',
   view: 'third', // third | first

@@ -3,7 +3,7 @@ import { store } from '../store';
 import { input, held, running } from '../lib/input';
 import { audio } from '../lib/audio';
 import { live, U } from './shared';
-import { PLACES, WALK_R, heightAt } from './terrain';
+import { PLACES, SAFE_R, heightAt } from './terrain';
 import { interactables } from './layout';
 
 // ------------------------------------------------------------ character ---
@@ -38,6 +38,15 @@ function buildCharacter() {
   add(head, new THREE.SphereGeometry(0.045, 8, 6), eye, -0.14, -0.02, 0.365);
   add(head, new THREE.SphereGeometry(0.045, 8, 6), eye, 0.14, -0.02, 0.365);
   add(head, new THREE.SphereGeometry(0.05, 8, 6), mat('#d18e68'), 0, -0.09, 0.39);
+  // Glasses: two round frames, a bridge and the arms back to the ears.
+  const frame = mat('#3a2418');
+  const lens = new THREE.MeshBasicMaterial({ color: '#cfe8f2', transparent: true, opacity: 0.28, depthWrite: false });
+  [-0.15, 0.15].forEach((x) => {
+    add(head, new THREE.TorusGeometry(0.105, 0.019, 6, 20), frame, x, -0.02, 0.4);
+    add(head, new THREE.CircleGeometry(0.1, 20), lens, x, -0.02, 0.405).castShadow = false;
+    add(head, new THREE.BoxGeometry(0.022, 0.022, 0.4), frame, x * 2.85, 0.0, 0.2);
+  });
+  add(head, new THREE.CylinderGeometry(0.014, 0.014, 0.1, 6), frame, 0, 0.0, 0.405).rotation.z = Math.PI / 2;
   add(head, new THREE.SphereGeometry(0.06, 8, 6), skin, -0.4, -0.02, 0);
   add(head, new THREE.SphereGeometry(0.06, 8, 6), skin, 0.4, -0.02, 0);
 
@@ -104,7 +113,7 @@ export function createPlayer(physics, trail) {
     const s = store.get();
     const id = best?.id ?? null;
     if ((s.near?.id ?? null) !== id || (id === 'fire' && s.near.night !== s.night)) {
-      store.set({ near: best ? { id, night: s.night, label: id === 'fire' && s.night ? 'volver al día' : best.label } : null });
+      store.set({ near: best ? { id, night: s.night, label: id === 'fire' && s.night ? 'Volver al día' : best.label } : null });
     }
   }
 
@@ -163,8 +172,15 @@ export function createPlayer(physics, trail) {
         p.y = Math.max(ground, p.y + vy * dt);
         live.grounded = p.y <= ground + 0.02;
       }
+      // Safe perimeter. The fence colliders already stop the character; this
+      // catches a rare escape and also covers the version without physics.
       const edge = Math.hypot(p.x, p.z);
-      if (edge > WALK_R || p.y < -30) place((p.x / edge) * (WALK_R - 0.6), (p.z / edge) * (WALK_R - 0.6));
+      if (edge > SAFE_R - 0.7) {
+        const k = (SAFE_R - 0.8) / edge;
+        if (!physics) { p.x *= k; p.z *= k; p.y = Math.max(p.y, heightAt(p.x, p.z)); }
+        else if (edge > SAFE_R + 0.5) place(p.x * k, p.z * k);
+      }
+      if (p.y < heightAt(p.x, p.z) - 4) place(PLACES[0].stand[0], PLACES[0].stand[1]);
       if (live.teleport) { place(live.teleport[0], live.teleport[1]); live.teleport = null; }
 
       if (speed > 0.1) live.facing = lerpAngle(live.facing, Math.atan2(mx, mz), 1 - Math.exp(-dt * 12));

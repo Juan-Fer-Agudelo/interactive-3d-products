@@ -8,7 +8,7 @@ import { audio } from '../lib/audio';
 import { U, live } from './shared';
 import { trees } from './layout';
 import { buildMeadowGrass, buildTrees, createTrail } from './vegetation';
-import { buildCamp, buildLamps, buildPlaces, buildStonesAndRocks } from './scenery';
+import { buildCamp, buildFence, buildLamps, buildPlaces, buildStonesAndRocks } from './scenery';
 import { buildBirds, buildLights, buildMotes, buildRain, buildSeeds, buildSky } from './atmosphere';
 import { createPlayer } from './player';
 import { createOpening } from './opening';
@@ -38,7 +38,7 @@ function Scene({ quality, boot }) {
     const player = createPlayer(boot.physics, createTrail());
     group.add(
       lights.group, sky, boot.ground.mesh, buildStonesAndRocks(), buildMeadowGrass(tier.grass),
-      buildTrees(trees, tier.leaves), lamps.group, camp.group, places.group, rain.mesh, birds.group,
+      buildTrees(trees, tier.leaves), lamps.group, camp.group, places.group, buildFence(), rain.mesh, birds.group,
       seeds.mesh, buildMotes(90), player.group,
     );
     // ?entrar skips the opening, which is handy while working on the meadow.
@@ -71,7 +71,7 @@ function Scene({ quality, boot }) {
     // The first rendered frames compile every shader; only then does the show start.
     if (world.intro && !world.started && frames.current >= 4) {
       world.started = true;
-      store.set({ progress: 1, phrase: 'listo' });
+      store.set({ progress: 1, phrase: 'Listo' });
       setTimeout(() => {
         if (!world.intro) return;
         store.set({ phase: 'opening' });
@@ -85,7 +85,7 @@ function Scene({ quality, boot }) {
       }, s.phase === 'loading' ? 500 : 0);
     }
 
-    if (!world.intro && s.phase === 'loading' && frames.current >= 4) store.set({ progress: 1, phrase: 'listo', phase: 'meadow' });
+    if (!world.intro && s.phase === 'loading' && frames.current >= 4) store.set({ progress: 1, phrase: 'Listo', phase: 'meadow' });
 
     const inMeadow = s.phase === 'meadow';
     if (inMeadow) world.player.update(dt, t, camera);
