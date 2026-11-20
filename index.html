@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- viewport-fit=cover lets the HUD use the safe-area insets on notched phones. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Juan Fer Agudelo · Desarrollador Full-Stack | Portafolio 3D interactivo</title>
+    <meta name="description" content="Portafolio 3D interactivo de Juan Fernando Agudelo, desarrollador full-stack en Medellín. Recorre la pradera caminando: cada proyecto está en algún lugar de ella." />
+    <meta name="author" content="Juan Fernando Agudelo Colorado" />
+    <!-- Same blue as the sky of the first frame. -->
+    <meta name="theme-color" content="#7eb4e0" />
+    <meta name="color-scheme" content="light" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <style>
+      /* Painted before any script runs, so the page opens on the sky. */
+      html, body { margin: 0; height: 100%; background: linear-gradient(#7eb4e0, #c9e2f5); }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>
+      <p style="font-family: system-ui, sans-serif; max-width: 520px; margin: 20vh auto; padding: 0 20px; color: #3b3226">
+        La pradera se dibuja con JavaScript y aquí está desactivado. Actívalo y crece completa.
+        Mientras tanto puedes escribirme a juan.fernando.arch@gmail.com.
+      </p>
+    </noscript>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
