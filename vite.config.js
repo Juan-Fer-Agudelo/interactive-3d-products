@@ -1,8 +1,20 @@
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
+// LinkedIn and other link previews need absolute URLs in the Open Graph tags.
+// SITE_URL can be set by hand; on Vercel the production domain is used.
+const siteUrl = (
+  process.env.SITE_URL
+  || (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : '')
+).replace(/\/$/, '');
+
+const siteUrlPlugin = {
+  name: 'site-url',
+  transformIndexHtml: (html) => html.replaceAll('%SITE_URL%', siteUrl),
+};
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), siteUrlPlugin],
   server: { port: 3000 },
   build: {
     chunkSizeWarningLimit: 2600,
