@@ -2,7 +2,7 @@
 import gsap from 'gsap';
 import { store } from './store';
 import { audio } from './lib/audio';
-import { U } from './world/shared';
+import { U, live, MOON_DIR } from './world/shared';
 
 export const opening = { skip: null }; // set by the opening while it plays
 
@@ -50,6 +50,11 @@ export function setNight(night) {
   if (night) audio.chime();
   store.set({ night });
   gsap.to(U.uNight, { value: night ? 1 : 0, duration: 3.2, ease: 'sine.inOut' });
+  if (!night) return;
+  const target = Math.atan2(-MOON_DIR.x, -MOON_DIR.z);
+  const turn = ((((target - live.camYaw) % (Math.PI * 2)) + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+  const first = store.get().view === 'first';
+  gsap.to(live, { camYaw: live.camYaw + turn, camPitch: first ? -0.2 : 0.1, duration: 3.4, ease: 'sine.inOut' });
 }
 
 export function setView(view) {

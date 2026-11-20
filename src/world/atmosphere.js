@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { makeMaterial, U, SUN_DIR, live } from './shared';
+import { makeMaterial, U, SUN_DIR, MOON_DIR, live } from './shared';
 import { mulberry32, heightAt } from './terrain';
 
 // ------------------------------------------------------------------ sky ---
@@ -8,12 +8,13 @@ export function buildSky() {
     side: THREE.BackSide,
     depthWrite: false,
     fog: false,
-    uniforms: { uSun: U.uSun },
+    uniforms: { uSun: U.uSun, uMoon: { value: MOON_DIR } },
     vertex: /* glsl */ `
       varying vec3 vDir;
       void main() { vDir = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
     fragment: /* glsl */ `
       uniform vec3 uSun;
+      uniform vec3 uMoon;
       varying vec3 vDir;
       void main() {
         vec3 d = normalize(vDir);
@@ -30,13 +31,29 @@ export function buildSky() {
         // sun, and at night a moon in its place
         float s = max(dot(d, normalize(uSun)), 0.0);
         col += vec3(1.0, 0.93, 0.75) * (pow(s, 600.0) * 2.0 + pow(s, 24.0) * 0.18) * (1.0 - uNight) * (1.0 - uRain);
-        vec3 moonDir = normalize(vec3(-0.45, 0.6, -0.5));
-        float m = max(dot(d, moonDir), 0.0);
-        col += vec3(0.85, 0.9, 1.0) * (smoothstep(0.9993, 0.9996, m) + pow(m, 60.0) * 0.12) * uNight;
-        // stars
-        vec3 g = floor(d * 140.0);
-        float star = step(0.9965, hash31(g)) * (0.5 + 0.5 * sin(uTime * 2.0 + hash31(g + 3.0) * 30.0));
-        col += vec3(star) * uNight * smoothstep(0.05, 0.4, d.y) * (1.0 - cloud);
+        float clear = 1.0 - cloud * mix(0.85, 0.35, uNight);
+        // stars: round points that twinkle, thinning out only at the very horizon
+        vec3 sd = d * 190.0;
+        vec3 cell = floor(sd);
+        float h = hash31(cell);
+        float size = mix(0.16, 0.34, hash31(cell + 7.0));
+        float star = step(0.972, h) * smoothstep(size, 0.0, length(fract(sd) - 0.5));
+        star *= 0.55 + 0.45 * sin(uTime * (1.5 + h * 3.0) + hash31(cell + 3.0) * 40.0);
+        vec3 starCol = mix(vec3(1.0, 0.92, 0.8), vec3(0.8, 0.88, 1.0), hash31(cell + 11.0));
+        col += starCol * star * 1.6 * uNight * smoothstep(-0.02, 0.1, d.y) * clear * (1.0 - uRain);
+        // moon: a lit disc with soft maria, a halo, and a wash of light around it
+        vec3 mDir = normalize(uMoon);
+        float m = max(dot(d, mDir), 0.0);
+        float disc = smoothstep(0.99880, 0.99895, m);
+        vec3 mt = normalize(cross(mDir, vec3(0.0, 1.0, 0.0)));
+        vec3 mb = cross(mt, mDir);
+        vec2 mp = vec2(dot(d, mt), dot(d, mb)) * 60.0;
+        float maria = noise3(vec3(mp * 1.3, 5.0)) * 0.6 + noise3(vec3(mp * 3.1, 9.0)) * 0.4;
+        vec3 moonCol = mix(vec3(0.98, 0.96, 0.88), vec3(0.62, 0.65, 0.72), smoothstep(0.42, 0.7, maria));
+        moonCol *= 1.0 - 0.18 * smoothstep(0.9993, 0.9988, m); // a little darker towards the rim
+        col = mix(col, moonCol, disc * uNight * (1.0 - uRain * 0.7));
+        col += vec3(0.62, 0.72, 1.0) * (pow(m, 900.0) * 0.55 * (1.0 - disc * 0.9) + pow(m, 60.0) * 0.16) * uNight * (1.0 - uRain * 0.7);
+
         gl_FragColor = vec4(col, 1.0);
         #include <colorspace_fragment>
       }`,

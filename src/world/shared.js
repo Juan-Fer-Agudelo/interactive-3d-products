@@ -2,6 +2,8 @@ import * as THREE from 'three';
 
 // Values every shader and every system reads. Mutated in place each frame.
 export const SUN_DIR = new THREE.Vector3(0.5, 0.74, 0.42).normalize();
+// Low over the trees, in the direction the camera faces from the camp.
+export const MOON_DIR = new THREE.Vector3(-0.33, 0.29, -0.9).normalize();
 
 export const U = {
   uTime: { value: 0 },

@@ -117,7 +117,7 @@ export function createPlayer(physics, trail) {
       // Looking around.
       live.camYaw -= input.look.dx * 0.0046;
       const first = s.view === 'first';
-      live.camPitch = THREE.MathUtils.clamp(live.camPitch + input.look.dy * 0.0036, first ? -0.7 : -0.12, first ? 1.0 : 1.2);
+      live.camPitch = THREE.MathUtils.clamp(live.camPitch + input.look.dy * 0.0036, first ? -0.7 : 0.08, first ? 1.0 : 1.2);
       input.look.dx = input.look.dy = 0;
 
       // What the player wants.
@@ -200,7 +200,10 @@ export function createPlayer(physics, trail) {
         wanted.y = Math.max(wanted.y, heightAt(wanted.x, wanted.z) + 0.6);
         const glide = Math.min(1, (t - live.entered) / 4.5);
         camera.position.lerp(wanted, 1 - Math.exp(-dt * (0.9 + glide * glide * 8)));
-        look.lerp(target, 1 - Math.exp(-dt * 12));
+        // Dragging the camera low tilts the view up to the sky instead of
+        // pushing the camera into the grass.
+        const lift = THREE.MathUtils.clamp((0.2 - live.camPitch) * 24, 0, 2);
+        look.lerp(wanted.set(target.x, target.y + lift, target.z), 1 - Math.exp(-dt * 12));
         camera.lookAt(look);
       }
     },
